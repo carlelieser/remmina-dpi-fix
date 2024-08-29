@@ -2,25 +2,22 @@
 
 set -a && source .env && set +a
 
-PREFS_FILE="$PREFS_DIR/remmina.pref"
-PREFS_BACKUP_FILE="$PREFS_DIR/remmina_backup.bak"
 KEYS=()
 
 if [ ! -f keys.txt ]; then
-	PREFS=$(sudo -k cat $PREFS_FILE)
+	PREFS=$(sudo -k cat "$PREFS_FILE")
 
 	while IFS= read -r pair; do
 	    if [[ $pair =~ \[.*\] ]]; then
 		continue
 	    fi
 
-	    KEYS+=("$(echo $pair | awk -F'=' '{print $1}')")
+	    KEYS+=("$(echo "$pair" | awk -F'=' '{print $1}')")
 	done <<< "$PREFS"
 
 	rm -f keys.txt
 
 	echo "${KEYS[*]}" > keys.txt
-
 fi
 
 KEYS=($(cat keys.txt))
