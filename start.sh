@@ -134,7 +134,7 @@ select opt in "${OPTIONS[@]}" "Cancel"; do
     esac
 done
 
-REMMINA_PROFILE_PATH="$CONNECTIONS_DIR/$opt"
+SELECTED_PROFILE="$CONNECTIONS_DIR/$opt"
 
 apply_scale_factor
 
@@ -151,11 +151,11 @@ if [ $# -gt 0 ]; then
 
     commands=$(IFS=' '; echo "${config[*]}")
 
-    remmina $commands --update-profile $REMMINA_PROFILE_PATH
+    remmina $commands --update-profile $SELECTED_PROFILE
 fi
 
-remmina --set-option postcommand="killall remmina" --update-profile $REMMINA_PROFILE_PATH &
-remmina $REMMINA_PROFILE_PATH
+remmina --set-option postcommand="killall remmina" --update-profile $SELECTED_PROFILE &
+remmina $SELECTED_PROFILE
 
 cleanup
 
