@@ -155,7 +155,10 @@ if [ $# -gt 0 ]; then
 fi
 
 remmina --set-option postcommand="killall remmina" --update-profile $SELECTED_PROFILE &
-remmina $SELECTED_PROFILE
+remmina $SELECTED_PROFILE &
+
+PID=$!
+wait $PID
 
 cleanup
 
