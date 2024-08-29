@@ -3,13 +3,27 @@
 set -a && source .env && set +a
 
 PREFS_FILE="$PREFS_DIR/remmina.pref"
+PREFS_BACKUP_FILE="$PREFS_DIR/remmina_backup.bak"
+KEYS=()
 
 if [ ! -f keys.txt ]; then
-	KEYS=()
-	echo "⚠️ Warning:  keys.txt not found. Please run generate-pref-keys.sh to generate the file. Ignore this message if not using global settings."
-	:else
-	KEYS=($(cat keys.txt))
+	PREFS=$(sudo -k cat $PREFS_FILE)
+
+	while IFS= read -r pair; do
+	    if [[ $pair =~ \[.*\] ]]; then
+		continue
+	    fi
+
+	    KEYS+=("$(echo $pair | awk -F'=' '{print $1}')")
+	done <<< "$PREFS"
+
+	rm -f keys.txt
+
+	echo "${KEYS[*]}" > keys.txt
+
 fi
+
+KEYS=($(cat keys.txt))
 
 MONITOR_DATA_SOURCE=$(gdbus call --session --dest org.gnome.Mutter.DisplayConfig --object-path /org/gnome/Mutter/DisplayConfig --method org.gnome.Mutter.DisplayConfig.GetCurrentState)
 MONITOR_DATA=$(echo "$MONITOR_DATA_SOURCE" | grep -oP "\('[0-9]+x[0-9]+@[0-9]+\.[0-9]+', [0-9]+, [0-9]+, [0-9]+\.[0-9]+" | head -n 1)
@@ -39,14 +53,14 @@ restore_scale_factor() {
 }
 
 backup_prefs_file() {
-	if [ ! -f "$PREFS_FILE.bak" ]; then
-		cp "$PREFS_FILE" "$PREFS_FILE.bak"
+	if [ ! -f "$PREFS_BACKUP_FILE" ]; then
+		cp "$PREFS_FILE" "$PREFS_BACKUP_FILE"
 	fi
 }
 
 restore_prefs_file() {
-	if [ -f "$PREFS_FILE.bak" ]; then
-		mv "$PREFS_FILE.bak" "$PREFS_FILE"
+	if [ -f "$PREFS_BACKUP_FILE" ]; then
+		mv "$PREFS_BACKUP_FILE" "$PREFS_FILE"
 	fi
 }
 
@@ -140,11 +154,11 @@ if [ $# -gt 0 ]; then
 
     commands=$(IFS=' '; echo "${config[*]}")
 
-    remmina $commands --update-profile "$REMMINA_PROFILE_PATH"
+    remmina $commands --update-profile $REMMINA_PROFILE_PATH
 fi
 
-remmina --set-option postcommand="'killall remmina" --update-profile "$REMMINA_PROFILE_PATH" &
-remmina "$REMMINA_PROFILE_PATH"
+remmina --set-option postcommand="killall remmina" --update-profile $REMMINA_PROFILE_PATH &
+remmina $REMMINA_PROFILE_PATH
 
 cleanup
 
